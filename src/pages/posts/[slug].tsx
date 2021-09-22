@@ -7,6 +7,7 @@ import React from "react"
 import { RichText } from "prismic-dom"
 import { getPrismicClient } from "../../services/prismic"
 
+import styles from './post.module.scss';
 
 interface PostProps {
   post: {
@@ -24,11 +25,13 @@ export default function Post({ post } : PostProps){
         <title>{post.title} | Ignews </title>
       </Head>
 
-      <main>
-        <article>
+      <main className={styles.container}>
+        <article className={styles.post}>
           <h1>{post.title}</h1>
           <time>{post.updatedAt}</time>
-          <div dangerouslySetInnerHTML={{__html: post.content}}/>  
+          <div
+            className={styles.postContent} 
+            dangerouslySetInnerHTML={{__html: post.content}}/>  
         </article>  
       </main> 
     </>
@@ -39,6 +42,15 @@ export default function Post({ post } : PostProps){
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getSession({req: context.req})
   const {slug} = context.query;
+  
+  if (!session?.activeSubscription) {
+    return{
+      redirect: {
+        destination: '/',
+        permanent: false,
+      }
+    }
+  }
 
   const prismic = getPrismicClient(context.req);
 
@@ -53,7 +65,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       day: '2-digit',
       month: 'long',
       year: 'numeric'
-    })
+    }),
   }
   return{
     props:{
